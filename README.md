@@ -343,3 +343,116 @@ options {
 				listen-on-v6 { any; };
 };
 ```
+
+## Problem Solution
+
+### 1
+
+> Agar topologi yang kalian buat dapat mengakses keluar, kalian diminta untuk mengkonfigurasi Foosha menggunakan iptables, tetapi Luffy tidak ingin menggunakan MASQUERADE.
+
+Syntax iptables yang dapat digunakan untuk masalah tersebut adalah sebagai berikut.
+
+```bash
+iptables -t nat -A POSTROUTING -s 192.200.0.0/21 -o eth0 -j SNAT --to-source 192.168.122.96
+```
+##### Testing
+
+![problem 1](https://user-images.githubusercontent.com/65794806/145668234-89086423-06fb-4e94-8cb4-74107336141a.gif)
+
+### 2
+
+> Kalian diminta untuk mendrop semua akses HTTP dari luar Topologi kalian pada server yang merupakan DHCP server dan DNS Server demi menjaga keamanan.
+
+Syntax iptables yang dapat digunakan untuk masalah tersebut adalah sebagai berikut.
+
+```bash
+# di doriki & jipangu
+iptables -A FORWARD -d 192.200.7.128/29 -i eth0 -p tcp --dport 80 -j DROP
+iptables -A FORWARD -d 192.200.7.128/29 -i eth0 -p tcp --dport 443 -j ACCEPT
+```
+##### Testing
+ping google.com dan ping monta.if.its.ac.id
+
+![problem 2](https://user-images.githubusercontent.com/65794806/145668333-91c04d99-a344-4311-af9e-1edeab04a617.gif)
+
+### 3
+
+> Karena kelompok kalian maksimal terdiri dari 3 orang. Luffy meminta kalian untuk membatasi DHCP dan DNS Server hanya boleh menerima maksimal 3 koneksi ICMP secara bersamaan menggunakan iptables, selebihnya didrop.
+
+Syntax iptables ditempatkan pada ip DHCP server dan DNS Server.
+
+```bash
+# run di doriki & jipangu
+iptables -A INPUT -p icmp -m connlimit --connlimit-above 3 --connlimit-mask 0 -j DROP
+```
+
+##### Testing
+
+![problem 3](https://user-images.githubusercontent.com/65794806/145668392-cf5f8269-a61b-4c6d-96ac-ee3b0038bdb0.png)
+
+### 4
+
+> Akses dari subnet Blueno dan Cipher hanya diperbolehkan pada pukul 07.00 - 15.00 pada hari Senin sampai Kamis.
+
+Syntax iptables yang dapat digunakan untuk masalah tersebut adalah sebagai berikut.
+
+```bash
+# Script di run di doriki
+# Blueno
+iptables -A INPUT -s 192.200.7.0/25 -m time --timestart 07:00 --timestop 15:00 --weekdays Mon,Tue,Wed,Thu -j ACCEPT
+iptables -A INPUT -s 192.200.7.0/25 -j REJECT
+
+# Cipher
+iptables -A INPUT -s 192.200.0.0/22 -m time --timestart 07:00 --timestop 15:00 --weekdays Mon,Tue,Wed,Thu -j ACCEPT
+iptables -A INPUT -s 192.200.0.0/22 -j REJECT
+```
+##### Testing
+```bash
+Senin
+date -s "6 DEC 2021 08:00:00" -> diterima
+date -s "6 DEC 2021 16:00:00" -> ditolak
+date -s "6 DEC 2021 18:00:00" -> ditolak
+
+
+Sabtu
+date -s "13 NOV 2021 09:00:00" -> ditolak
+date -s "13 NOV 2021 01:00:00" -> ditolak
+```
+
+![problem 4a](https://user-images.githubusercontent.com/65794806/145668478-51917a3d-4b82-4668-8d13-75f06de95399.png)
+
+![problem 4b](https://user-images.githubusercontent.com/65794806/145668481-af7494a5-3c62-4639-8cb1-8f322a6d59cc.png)
+
+### 5
+
+> Akses dari subnet Elena dan Fukuro hanya diperbolehkan pada pukul 15.01 hingga pukul 06.59 setiap harinya.
+
+Syntax iptables yang dapat digunakan untuk masalah tersebut adalah sebagai berikut.
+
+```bash
+#  ELENA
+iptables -A INPUT -s 192.200.4.0/23 -m time --timestart 15:01 --timestop 06:59 -j ACCEPT
+iptables -A INPUT -s 192.200.4.0/23 -j REJECT
+
+# FUKUROU
+iptables -A INPUT -s 192.200.6.0/24 -m time --timestart 15:01 --timestop 06:59 -j ACCEPT
+iptables -A INPUT -s 192.200.6.0/24 -j REJECT
+```
+
+##### Testing
+```bash
+Senin
+date -s "6 DEC 2021 15:00:00" -> ditolak
+date -s "7 DEC 2021 02:00:00" -> diterima
+```
+![problem 5a](https://user-images.githubusercontent.com/65794806/145668523-5f22ed6e-70c3-4cea-8a1e-d2fb1143b19e.png)
+
+![problem 5b](https://user-images.githubusercontent.com/65794806/145668524-41566249-b262-4fff-8e2c-f49f754e60a3.png)
+
+### 6
+
+>
+
+### Kendala Pengerjaan
+
+1. Pada awalnya masih bingung dengan aturan dan arah penggabungan subnet pada CIDR.
