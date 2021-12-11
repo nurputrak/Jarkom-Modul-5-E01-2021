@@ -18,7 +18,7 @@
 
 ## VLSM(Variable Length Subnet Masking)
 
-Menentukan jumlah alamat IP yang dibutuhkan oleh tiap subnet dan  melabel netmask berdasarkan jumlah IP yang dibutuhkan.\
+Menentukan jumlah alamat IP yang dibutuhkan oleh tiap subnet dan  melabel netmask berdasarkan jumlah IP yang dibutuhkan.
 
 | Subnet | Note | Jumlah IP | Length |
 | --- | --- | --- | --- |
@@ -120,6 +120,8 @@ netmask 255.255.252.0
 
 #### Foosha 
 
+Karena menggunkana DHCP, pada foosha dibuat fix adress dengan memasukkan `hwaddress` agar ip tidak berubah-ubah.
+
 - ip eth0 192.168.122.96
 
 ```bash
@@ -128,7 +130,7 @@ iface lo inet loopback
 
 auto eth0
 iface eth0 inet dhcp
-hwaddress ether b2:ab:03:2e:50:76
+hwaddress ether b2:ab:03:2e:50:76 //fix address
 
 auto eth1
 iface eth1 inet static
@@ -190,6 +192,8 @@ netmask 255.255.255.0
 ```
 
 ### Routing Foosha
+
+Pada routing, subnet bagian kiri diatur agar melewati Water7 dan subnet bagian kanan melewati Guanhao.
 
 ```bash
 # kiri
@@ -280,6 +284,8 @@ subnet 192.200.7.128 netmask 255.255.255.248 {
 
 ### Config Relay
 
+Relay ditempatkan pada Water7 dan Guanhao.
+
 1. Menginstall relay
 ```bash
 # water7 guanhao
@@ -287,7 +293,7 @@ apt-get update
 apt-get install isc-dhcp-relay -y
 ```
 
-2. Melakukan konfigurasi pada isc-dhcp-relay
+2. Melakukan konfigurasi pada isc-dhcp-relay, memasukkan Jipangu(.131) sebagai server.
 ```bash
 # /etc/default/isc-dhcp-relay
 # What servers should the DHCP relay forward requests to?
@@ -302,7 +308,7 @@ OPTIONS=""
 
 #### SS DHCP
 
-Setelah melakukan konfigurasi, maka dhcp didapatkan IP sesuai subnet.
+Setelah melakukan konfigurasi, maka IP dhcp didapatkan sesuai subnet.
 
 ![ss dhcp1](https://user-images.githubusercontent.com/65794806/145668013-c13459db-cf87-43c3-8715-21b6967c90a5.png)
 
@@ -355,6 +361,9 @@ Syntax iptables yang dapat digunakan untuk masalah tersebut adalah sebagai berik
 ```bash
 iptables -t nat -A POSTROUTING -s 192.200.0.0/21 -o eth0 -j SNAT --to-source 192.168.122.96
 ```
+
+Karena tidak menggunakan MASQUERADE, maka digunakan SNAT. Source akan diubah dari yang awalnya 0.0 ke Foosha dengan `--to-source 192.168.122.96`.
+
 ##### Testing
 
 ![problem 1](https://user-images.githubusercontent.com/65794806/145668234-89086423-06fb-4e94-8cb4-74107336141a.gif)
@@ -363,15 +372,18 @@ iptables -t nat -A POSTROUTING -s 192.200.0.0/21 -o eth0 -j SNAT --to-source 192
 
 > Kalian diminta untuk mendrop semua akses HTTP dari luar Topologi kalian pada server yang merupakan DHCP server dan DNS Server demi menjaga keamanan.
 
-Syntax iptables yang dapat digunakan untuk masalah tersebut adalah sebagai berikut.
+Syntax iptables yang dapat digunakan untuk masalah tersebut adalah sebagai berikut. Iptables ditempatkan pada doriki yang merupakan DNS server & jipangu yang merupakan DHCP server.
 
 ```bash
 # di doriki & jipangu
 iptables -A FORWARD -d 192.200.7.128/29 -i eth0 -p tcp --dport 80 -j DROP
 iptables -A FORWARD -d 192.200.7.128/29 -i eth0 -p tcp --dport 443 -j ACCEPT
 ```
+
+Semua akses dari port 80 yaitu HTTP akan diblok, sedangkan akses dari port 443 yaitu HTTPS tetap diterima.
+
 ##### Testing
-ping google.com dan ping monta.if.its.ac.id
+ping google.com(https) dan ping monta.if.its.ac.id(http)
 
 ![problem 2](https://user-images.githubusercontent.com/65794806/145668333-91c04d99-a344-4311-af9e-1edeab04a617.gif)
 
@@ -385,6 +397,7 @@ Syntax iptables ditempatkan pada ip DHCP server dan DNS Server.
 # run di doriki & jipangu
 iptables -A INPUT -p icmp -m connlimit --connlimit-above 3 --connlimit-mask 0 -j DROP
 ```
+Karena koneksinya ICMP maka setelah -p dapat diisi `icmp`. Limit yang digunakan adalah maksimal 3 sehingga dapat menggunakan `--connlimit-above 3` dan menambahkan target `DROP` agar koneksi lainnya selain 3 koneksi tersebut ditolak.
 
 ##### Testing
 
@@ -406,6 +419,9 @@ iptables -A INPUT -s 192.200.7.0/25 -j REJECT
 iptables -A INPUT -s 192.200.0.0/22 -m time --timestart 07:00 --timestop 15:00 --weekdays Mon,Tue,Wed,Thu -j ACCEPT
 iptables -A INPUT -s 192.200.0.0/22 -j REJECT
 ```
+
+Waktu diatur dengan menggunakan `-m time` dengan `--timestart` untuk batas awal waktu dan `--timestop` untuk batas akhir waktu. `--weekdays` digunakan untuk menentukan hari. Sehingga jika koneksi sesuai dengan kondisi tersebut maka akan diterima. Jika tidak sesuai, maka akan menuju rules selanjutnya yang mana akan di reject.
+
 ##### Testing
 ```bash
 Senin
@@ -438,6 +454,8 @@ iptables -A INPUT -s 192.200.4.0/23 -j REJECT
 iptables -A INPUT -s 192.200.6.0/24 -m time --timestart 15:01 --timestop 06:59 -j ACCEPT
 iptables -A INPUT -s 192.200.6.0/24 -j REJECT
 ```
+
+Karena tidak ada ketentuan hari, maka `--weekdays` tidak perlu digunakan.
 
 ##### Testing
 ```bash
@@ -477,4 +495,4 @@ Kemudian di curl ke DNS server
 
 ### Kendala Pengerjaan
 
-1. Pada awalnya masih bingung dengan aturan dan arah penggabungan subnet pada CIDR.
+1. Semula tidak paham jika https merupakan kasus lain dari http sehingga rules awal yang digunakan hanya untuk http. 
