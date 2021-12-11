@@ -62,3 +62,284 @@ Selanjutnya menyesuaikan pembagian IP sesuai dengan subnet yang telah dibagi ber
 ## Topologi Pada GNS
 
 ![topologi gns](https://user-images.githubusercontent.com/65794806/145667142-4c366eaf-c4f4-4736-82d5-310cd0c6722d.png)
+
+## Configuration
+
+### Config ETH
+
+Selanjutnya melakukan mengisi konfigurasi network,  melakukan assignment dengan IP yang telah ditetapkan sesuai dengan subnet.
+
+#### Doriki
+
+```bash
+auto eth0
+iface eth0 inet static
+address 192.200.7.130
+netmask 255.255.255.248
+gateway 192.200.7.129
+```
+
+#### Jipangu
+
+```bash
+auto eth0
+iface eth0 inet static
+address 192.200.7.131
+netmask 255.255.255.248
+gateway 192.200.7.129
+```
+
+#### Water7
+
+```bash
+auto lo
+iface lo inet loopback
+
+auto eth0
+iface eth0 inet static
+address 192.200.7.145
+netmask 255.255.255.252
+gateway 192.200.7.146
+
+auto eth1
+iface eth1 inet static
+address 192.200.7.129
+netmask 255.255.255.248
+
+auto eth2
+iface eth2 inet static
+address 192.200.7.1
+netmask 255.255.255.128
+
+
+auto eth3
+iface eth3 inet static
+address 192.200.0.1
+netmask 255.255.252.0
+```
+
+#### Foosha 
+
+- ip eth0 192.168.122.96
+
+```bash
+auto lo
+iface lo inet loopback
+
+auto eth0
+iface eth0 inet dhcp
+hwaddress ether b2:ab:03:2e:50:76
+
+auto eth1
+iface eth1 inet static
+address 192.200.7.146
+netmask 255.255.255.252
+
+auto eth2
+iface eth2 inet static
+address 192.200.7.149
+netmask 255.255.255.252
+```
+
+#### Jorge
+
+```bash
+auto eth0
+iface eth0 inet static
+address 192.200.7.138
+netmask 255.255.255.248
+gateway 192.200.7.137
+```
+
+#### Maingate
+
+```bash
+auto eth0
+iface eth0 inet static
+address 192.200.7.139
+netmask 255.255.255.248
+gateway 192.200.7.137
+```
+
+#### Guanhao
+
+```bash
+auto lo
+iface lo inet loopback
+
+auto eth0
+iface eth0 inet static
+address 192.200.7.150
+netmask 255.255.255.252
+gateway 192.200.7.149
+
+auto eth1
+iface eth1 inet static
+address 192.200.7.137
+netmask 255.255.255.248
+
+auto eth2
+iface eth2 inet static
+address 192.200.4.1
+netmask 255.255.254.0
+
+auto eth3
+iface eth3 inet static
+address 192.200.6.1
+netmask 255.255.255.0
+```
+
+### Routing Foosha
+
+```bash
+# kiri
+route add -net 192.200.7.128 netmask 255.255.255.248 gw 192.200.7.145
+route add -net 192.200.7.0 netmask 255.255.255.128 gw 192.200.7.145
+route add -net 192.200.0.0 netmask 255.255.252.0 gw 192.200.7.145
+
+# kanan
+route add -net 192.200.4.0 netmask 255.255.254.0 gw 192.200.7.150
+route add -net 192.200.6.0 netmask 255.255.255.0 gw 192.200.7.150
+route add -net 192.200.7.136  netmask 255.255.255.248 gw 192.200.7.150
+```
+
+### Config DHCP
+
+1. Host yang menggunakan DHCP berjumlah 4, maka harus dibuat dulu subnetnya, sehingga network configuration diisi sebagai berikut.
+```bash
+auto lo
+iface lo inet loopback
+
+auto eth0
+iface eth0 inet dhcp
+```
+
+2. Kemudian install deps
+```bash
+# jipangu
+apt-get update
+apt-get install isc-dhcp-server -y
+```
+
+3. Pada Jipangu, ubah config interfaces di isc-dhcp-server, tambahkan eth0
+```bash
+# /etc/default/isc-dhcp-server
+INTERFACES="eth0"
+```
+
+4. Melakukan konfigurasi pada /etc/dhcp/dhcpd.conf
+```bash
+# /etc/dhcp/dhcpd.conf
+# Blueno A2
+subnet 192.200.7.0 netmask 255.255.255.128 {
+	range 192.200.7.2 192.200.7.126;
+	option routers 192.200.7.1;
+	option broadcast-address 192.200.7.127;
+	option domain-name-servers 192.200.7.130;
+	default-lease-time 600;
+	max-lease-time 7200;
+}
+
+# Cipher A3
+subnet 192.200.0.0 netmask 255.255.252.0 {
+	range 192.200.0.2 192.200.3.254;
+	option routers 192.200.0.1;
+	option broadcast-address 192.200.3.255;
+	option domain-name-servers 192.200.7.130;
+	default-lease-time 600;
+	max-lease-time 7200;
+}
+
+
+# Elena A6
+subnet 192.200.4.0 netmask 255.255.254.0 {
+	range 192.200.4.2 192.200.5.254;
+	option routers 192.200.4.1;
+	option broadcast-address 192.200.5.255;
+	option domain-name-servers 192.200.7.130;
+	default-lease-time 600;
+	max-lease-time 7200;
+}
+
+
+# Fukurou A7
+subnet 192.200.6.0 netmask 255.255.255.0 {
+	range 192.200.6.2 192.200.6.254;
+	option routers 192.200.6.1;
+	option broadcast-address 192.200.6.255;
+	option domain-name-servers 192.200.7.130;
+	default-lease-time 600;
+	max-lease-time 7200;
+}
+
+# Routing dari Jipangu ke router
+subnet 192.200.7.128 netmask 255.255.255.248 {
+        option routers 192.200.7.129;
+}
+```
+
+### Config Relay
+
+1. Menginstall relay
+```bash
+# water7 guanhao
+apt-get update
+apt-get install isc-dhcp-relay -y
+```
+
+2. Melakukan konfigurasi pada isc-dhcp-relay
+```bash
+# /etc/default/isc-dhcp-relay
+# What servers should the DHCP relay forward requests to?
+SERVERS="192.200.7.131"
+
+# On what interfaces should the DHCP relay (dhrelay) serve DHCP requests?
+INTERFACES="eth0 eth1 eth2 eth3"
+
+# Additional options that are passed to the DHCP relay daemon?
+OPTIONS=""
+```
+
+#### SS DHCP
+
+Setelah melakukan konfigurasi, maka dhcp didapatkan IP sesuai subnet.
+
+![ss dhcp1](https://user-images.githubusercontent.com/65794806/145668013-c13459db-cf87-43c3-8715-21b6967c90a5.png)
+
+![ss dhcp2](https://user-images.githubusercontent.com/65794806/145668014-59eacf01-f6df-4dbd-bfcc-dbdade5ba435.png)
+
+![ss dhcp3](https://user-images.githubusercontent.com/65794806/145668015-b43e3d97-bcc1-47db-b335-916cf0e5d223.png)
+
+![ss dhcp4](https://user-images.githubusercontent.com/65794806/145668012-5e14a7a4-cc6d-4d77-b130-e7c26855d5d8.png)
+
+### Config DNS (Doriki)
+
+```bash
+# /etc/bind/named.conf.options
+options {
+        directory "/var/cache/bind";
+
+        // If there is a firewall between you and nameservers you want
+        // to talk to, you may need to fix the firewall to allow multiple
+        // ports to talk.  See http://www.kb.cert.org/vuls/id/800113
+
+        // If your ISP provided one or more IP addresses for stable
+        // nameservers, you probably want to use them as forwarders.
+        // Uncomment the following block, and insert the addresses replacing
+        // the all-0's placeholder.
+
+        forwarders {
+                192.168.122.1;
+        };
+
+        //========================================================================
+        // If BIND logs error messages about the root key being expired,
+        // you will need to update your keys.  See https://www.isc.org/bind-keys
+        //========================================================================
+        //dnssec-validation auto;
+        allow-query{any;};
+
+        auth-nxdomain no;    # conform to RFC1035
+				listen-on-v6 { any; };
+};
+```
