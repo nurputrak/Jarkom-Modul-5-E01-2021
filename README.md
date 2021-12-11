@@ -4,6 +4,21 @@
 - Nur Putra Khanafi 05111940000020
 - Husnan 05111940007002
 
+### List
+
+1. [Pembagian Subnet](https://github.com/nurputrak/Jarkom-Modul-5-E01-2021#pembagian-subnet)
+2. [VLSM Solution](https://github.com/nurputrak/Jarkom-Modul-5-E01-2021#vlsmvariable-length-subnet-masking)
+3. [Topologi GNS](https://github.com/nurputrak/Jarkom-Modul-5-E01-2021#topologi-pada-gns)
+4. [Konfigurasi Eth, DHCP, Relay, DNS](https://github.com/nurputrak/Jarkom-Modul-5-E01-2021#configuration)
+5. [Problem Solution](https://github.com/nurputrak/Jarkom-Modul-5-E01-2021#problem-solution)
+	1. [Problem 1](https://github.com/nurputrak/Jarkom-Modul-5-E01-2021#1)
+	2. [Problem 2](https://github.com/nurputrak/Jarkom-Modul-5-E01-2021#2)
+	3. [Problem 3](https://github.com/nurputrak/Jarkom-Modul-5-E01-2021#3)
+	4. [Problem 4](https://github.com/nurputrak/Jarkom-Modul-5-E01-2021#4)
+	5. [Problem 5](https://github.com/nurputrak/Jarkom-Modul-5-E01-2021#5)
+	6. [Problem 6](https://github.com/nurputrak/Jarkom-Modul-5-E01-2021#6)
+6. [Kendala Pengerjaan](https://github.com/nurputrak/Jarkom-Modul-5-E01-2021#kendala-pengerjaan)
+
 ## Pembagian Subnet
 
 ![topologi awal](https://user-images.githubusercontent.com/65794806/145667043-9e7bc343-492e-41a6-a3d4-e77843c96ce4.png)
@@ -495,4 +510,4 @@ Kemudian di curl ke DNS server
 
 ### Kendala Pengerjaan
 
-1. Semula tidak paham jika https merupakan kasus lain dari http sehingga rules awal yang digunakan hanya untuk http. 
+1. Pada problem 2, semula tidak paham jika https merupakan kasus lain dari http sehingga rules awal yang digunakan hanya untuk http. 
